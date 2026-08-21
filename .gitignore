@@ -8,7 +8,21 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+dist
 *.local
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Migration data (Firebase exports, credentials)
+migration-data/
+
+# Firebase credentials — NEVER commit
+**/service-account*.json
+**/firebase-credentials*.json
+**/firebase-adminsdk*.json
 
 # Editor directories and files
 .vscode/*

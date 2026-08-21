@@ -2,12 +2,9 @@ import * as React from "react"
 import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 import Slider from "@mui/material/Slider"
-import { getFirestore, collection, addDoc } from "firebase/firestore"
+import { supabase } from "../lib/supabase"
 
 const units = ["/Rating/1.png", "/Rating/2.png", "/Rating/3.png", "/Rating/4.png", "/Rating/5.png"]
-
-// Inisialisasi Firestore
-const db = getFirestore()
 
 export default function Rating() {
 	const [value, setValue] = React.useState(() => {
@@ -39,14 +36,15 @@ export default function Rating() {
 			setIsSubmitting(true)
 			setValue(newValue)
 
-			// Tunda pengiriman data ke Firestore selama 2 detik
+			// Tunda pengiriman data ke Supabase selama 2 detik
 			setTimeout(async () => {
 				try {
-					const docRef = await addDoc(collection(db, "ratings"), {
+					const { error } = await supabase.from("ratings").insert({
 						value: newValue,
-						timestamp: new Date(),
 					})
-					console.log("Document written with ID: ", docRef.id)
+
+					if (error) throw error
+					console.log("Rating submitted successfully")
 
 					// Tambahkan jumlah peringkat yang telah diberikan pengguna hari ini
 					const ratingsToday = localStorage.getItem("ratingsToday")
@@ -54,7 +52,7 @@ export default function Rating() {
 					localStorage.setItem("ratingsToday", newRatingsToday.toString())
 					setRemainingRatings(2 - newRatingsToday)
 				} catch (e) {
-					console.error("Error adding document: ", e)
+					console.error("Error adding rating: ", e)
 				} finally {
 					setIsSubmitting(false)
 				}

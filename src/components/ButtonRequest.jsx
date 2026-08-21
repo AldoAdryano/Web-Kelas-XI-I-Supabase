@@ -5,7 +5,7 @@ import Modal from "@mui/material/Modal"
 import Typography from "@mui/material/Typography"
 import { useSpring, animated } from "@react-spring/web"
 import CloseIcon from "@mui/icons-material/Close"
-import { getStorage, ref, listAll, getDownloadURL, getMetadata } from "firebase/storage"
+import { supabase } from "../lib/supabase"
 
 export default function ButtonRequest() {
 	const [open, setOpen] = useState(false)
@@ -21,37 +21,35 @@ export default function ButtonRequest() {
 
 	const [images, setImages] = useState([])
 
-	// Fungsi untuk mengambil daftar gambar dari Firebase Storage
-	const fetchImagesFromFirebase = async () => {
+	// Fungsi untuk mengambil daftar gambar dari Supabase Storage
+	const fetchImagesFromSupabase = async () => {
 		try {
-			const storage = getStorage()
-			const storageRef = ref(storage, "images/")
+			const { data, error } = await supabase.storage
+				.from("uploads")
+				.list("", { sortBy: { column: "created_at", order: "asc" } })
 
-			const imagesList = await listAll(storageRef)
+			if (error) throw error
 
-			const imagePromises = imagesList.items.map(async (item) => {
-				const url = await getDownloadURL(item)
-				const metadata = await getMetadata(item)
+			const imageData = data
+				.filter((file) => file.name !== ".emptyFolderPlaceholder")
+				.map((file) => {
+					const { data: urlData } = supabase.storage
+						.from("uploads")
+						.getPublicUrl(file.name)
+					return {
+						url: urlData.publicUrl,
+						timestamp: file.created_at,
+					}
+				})
 
-				return {
-					url,
-					timestamp: metadata.timeCreated,
-				}
-			})
-
-			const imageURLs = await Promise.all(imagePromises)
-
-			// Urutkan array berdasarkan timestamp (dari yang terlama)
-			imageURLs.sort((a, b) => a.timestamp - b.timestamp)
-
-			setImages(imageURLs)
+			setImages(imageData)
 		} catch (error) {
-			console.error("Error fetching images from Firebase Storage:", error)
+			console.error("Error fetching images from Supabase Storage:", error)
 		}
 	}
 
 	useEffect(() => {
-		fetchImagesFromFirebase()
+		fetchImagesFromSupabase()
 	}, [])
 
 	return (

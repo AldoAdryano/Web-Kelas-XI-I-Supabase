@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { addDoc, collection, query, orderBy, onSnapshot, getDocs } from "firebase/firestore";
-import { db, auth } from "../firebase";
+import { supabase } from "../lib/supabase";
 import axios from "axios";
 import Swal from "sweetalert2";
 
@@ -11,15 +10,17 @@ function Chat() {
   const [userIp, setUserIp] = useState("");
   const [messageCount, setMessageCount] = useState(0);
 
-  const chatsCollectionRef = collection(db, "chats");
   const messagesEndRef = useRef(null);
 
-  // Fungsi untuk mengambil daftar alamat IP yang diblokir dari Firebase Firestore
+  // Fungsi untuk mengambil daftar alamat IP yang diblokir dari Supabase
   const fetchBlockedIPs = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "blacklist_ips"));
-      const blockedIPs = querySnapshot.docs.map((doc) => doc.data().ipAddress);
-      return blockedIPs;
+      const { data, error } = await supabase
+        .from("blacklist_ips")
+        .select("ip_address");
+
+      if (error) throw error;
+      return data.map((row) => row.ip_address);
     } catch (error) {
       console.error("Gagal mengambil daftar IP yang diblokir:", error);
       return [];
@@ -27,24 +28,54 @@ function Chat() {
   }
 
   useEffect(() => {
-    // Memuat pesan dari Firestore dan mengatur langganan untuk memantau perubahan
-    const queryChats = query(chatsCollectionRef, orderBy("timestamp"));
-    const unsubscribe = onSnapshot(queryChats, (snapshot) => {
-      const newMessages = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          ...data,
-          userIp: data.userIp,
-        };
-      });
-      setMessages(newMessages);
+    // Memuat pesan awal dari Supabase
+    const loadMessages = async () => {
+      const { data, error } = await supabase
+        .from("chats")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Gagal memuat pesan:", error);
+        return;
+      }
+
+      const formatted = data.map((row) => ({
+        message: row.message,
+        sender: { image: row.sender_image },
+        userIp: row.user_ip,
+      }));
+      setMessages(formatted);
       if (shouldScrollToBottom) {
         scrollToBottom();
       }
-    });
+    };
+
+    loadMessages();
+
+    // Langganan realtime untuk pesan baru
+    const channel = supabase
+      .channel("chats-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "chats" },
+        (payload) => {
+          const row = payload.new;
+          const newMsg = {
+            message: row.message,
+            sender: { image: row.sender_image },
+            userIp: row.user_ip,
+          };
+          setMessages((prev) => [...prev, newMsg]);
+          if (shouldScrollToBottom) {
+            scrollToBottom();
+          }
+        }
+      )
+      .subscribe();
 
     return () => {
-      unsubscribe(); // Membersihkan langganan saat komponen tidak lagi digunakan
+      supabase.removeChannel(channel); // Membersihkan langganan saat komponen tidak lagi digunakan
     }
   }, [shouldScrollToBottom]);
 
@@ -91,7 +122,7 @@ function Chat() {
     if (currentDateString === storedDateString) {
       // Jika tanggal saat ini sama dengan tanggal yang disimpan, periksa batasan pesan
       const userSentMessageCount = parseInt(localStorage.getItem(userIpAddress)) || 0;
-      if (userSentMessageCount >= 20) { // Batasan pesan per hari (2 pesan)
+      if (userSentMessageCount >= 20) { // Batasan pesan per hari (20 pesan)
         Swal.fire({
           icon: "error",
           title: "Message limit exceeded",
@@ -133,7 +164,7 @@ function Chat() {
         return;
       }
 
-      const senderImageURL = auth.currentUser?.photoURL || "/AnonimUser.png";
+      const senderImageURL = "/AnonimUser.png";
       const trimmedMessage = message.trim().substring(0, 60);
       const userIpAddress = userIp;
 
@@ -153,15 +184,17 @@ function Chat() {
       localStorage.setItem(userIpAddress, updatedSentMessageCount.toString());
       setMessageCount(updatedSentMessageCount);
 
-      // Menambahkan pesan ke Firestore
-      await addDoc(chatsCollectionRef, {
+      // Menambahkan pesan ke Supabase
+      const { error } = await supabase.from("chats").insert({
         message: trimmedMessage,
-        sender: {
-          image: senderImageURL,
-        },
-        timestamp: new Date(),
-        userIp: userIp,
+        sender_image: senderImageURL,
+        user_ip: userIp,
       });
+
+      if (error) {
+        console.error("Gagal mengirim pesan:", error);
+        return;
+      }
 
       setMessage(""); // Menghapus pesan setelah mengirim
       setTimeout(() => {

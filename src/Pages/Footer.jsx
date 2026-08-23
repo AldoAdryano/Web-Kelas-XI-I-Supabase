@@ -30,12 +30,12 @@ const Footer = () => {
 							<h2 className="mb-4 text-sm font-semibold uppercase text-white">Follow us</h2>
 							<ul className="text-gray-400 dark:text-gray-400 font-medium">
 								<li className="mb-2">
-									<a href="https://instagram.com/xl.claiforne_?igshid=OGQ5ZDc2ODk2ZA==" className="hover:underline ">
+									<a href="https://instagram.com/xl.claiforne_?igshid=OGQ5ZDc2ODk2ZA==" target="_blank" rel="noopener noreferrer" className="hover:underline ">
 										Instagram
 									</a>
 								</li>
 								<li>
-									<a href="https://www.tiktok.com/@claifornine.class?_t=8gSAvamjfCa&_r=1" className="hover:underline">
+									<a href="https://www.tiktok.com/@claifornine.class?_t=8gSAvamjfCa&_r=1" target="_blank" rel="noopener noreferrer" className="hover:underline">
 										TikTok
 									</a>
 								</li>

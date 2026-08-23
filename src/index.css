@@ -274,6 +274,7 @@ body {
 	background-image: radial-gradient(at -66% 56.8%, hsl(292, 93%, 53%) 0px, transparent 50%);
 	background-repeat: no-repeat, no-repeat;
 	z-index: -999;
+	pointer-events: none;
 }
 
 #Mesh1 {

@@ -94,12 +94,9 @@ export default function BoxTextAnonim() {
 						<Button onClick={handleClose} style={{ position: "absolute", top: "2%", right: "0" , color: "white",opacity: "70%"}}>
 							<CloseIcon />
 						</Button>
-						{/* <Typography id="spring-modal-title" variant="h6" component="h2">
-							Text in a modal
-						</Typography> */}
-						<Typography id="spring-modal-description" sx={{ mt: 3 }}>
+						<Box id="spring-modal-description" sx={{ mt: 3 }}>
 							<Chat/>
-						</Typography>
+						</Box>
 					</Box>
 				</Fade>
 			</Modal>

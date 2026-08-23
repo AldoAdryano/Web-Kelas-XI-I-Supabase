@@ -1,13 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-
-const Senin = React.lazy(() => import("../components/Mapel/Senin"));
-const Selasa = React.lazy(() => import("../components/Mapel/Selasa"));
-const Rabu = React.lazy(() => import("../components/Mapel/Rabu"));
-const Kamis = React.lazy(() => import("../components/Mapel/Kamis"));
-const Jumat = React.lazy(() => import("../components/Mapel/Jumat"));
-const Sabtu = React.lazy(() => import("../components/Mapel/Sabtu"));
+import { supabase } from "../lib/supabase";
 
 const Schedule = () => {
   const daysOfWeek = [
@@ -19,52 +13,52 @@ const Schedule = () => {
     "Friday",
     "Saturday",
   ];
-  const currentDay = daysOfWeek[new Date().getDay()];
-  const currentWeek = Math.floor((new Date().getDate() - 1) / 7) + 1;
+  const currentDayIndex = new Date().getDay();
+  const currentDay = daysOfWeek[currentDayIndex];
+
+  const [schedules, setSchedules] = useState([]);
+  const [pikets, setPikets] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     AOS.init();
     AOS.refresh();
-  }, []);
 
-  let piketGroup = [];
+    const fetchScheduleData = async () => {
+      try {
+        setLoading(true);
+        // Fetch schedules for current day
+        const { data: scheduleData, error: scheduleError } = await supabase
+          .from("schedules")
+          .select("*")
+          .eq("day_id", currentDayIndex)
+          .order("order_index", { ascending: true });
+        
+        if (scheduleError) throw scheduleError;
+        setSchedules(scheduleData || []);
 
-  // Menentukan kelompok piket berdasarkan minggu saat ini
-  if (currentWeek === 1 || currentWeek === 3) {
-    piketGroup = [
-      ["Aldo", "Alya", "Ayu", "Balqis", "Fitri", "Tia"],
-      ["Dina", "Eka", "Farhan", "Fauziyah", "Firda", "Chelsea"],
-      ["Geby", "Anggun", "Halwa", "Sultan", "Keysa", "Laura"],
-      ["Aeni", "Luna", "Marsa", "Maulidia", "Maya", "Candra", "Merys"],
-      ["Firdaus", "Ihsaina", "Niswah", "Mutia", "Nafis", "Nasywa"],
-      ["Nayla", "Muntaha", "Novelia", "Qoila", "Roro", "Sella", "Zhafira"],
-    ];
-  } else if (currentWeek === 2 || currentWeek === 4) {
-    piketGroup = [
-      ["Aldo", "Alya", "Ayu", "Balqis", "Fitri", "Tia"],
-      ["Dina", "Eka", "Farhan", "Fauziyah", "Firda", "Chelsea"],
-      ["Geby", "Anggun", "Halwa", "Sultan", "Keysa", "Laura"],
-      ["Aeni", "Luna", "Marsa", "Maulidia", "Maya", "Candra", "Merys"],
-      ["Firdaus", "Ihsaina", "Niswah", "Mutia", "Nafis", "Nasywa"],
-      ["Nayla", "Muntaha", "Novelia", "Qoila", "Roro", "Sella", "Zhafira"],
-    ];
-  }
+        // Fetch piket for current day
+        const { data: piketData, error: piketError } = await supabase
+          .from("piket")
+          .select("*")
+          .eq("day_id", currentDayIndex)
+          .order("order_index", { ascending: true });
+        
+        if (piketError) throw piketError;
+        setPikets(piketData || []);
+      } catch (error) {
+        console.error("Error fetching schedule data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const dayComponents = [
-    null, // Kosongkan indeks 0
-    Senin,
-    Selasa,
-    Rabu,
-    Kamis,
-    Jumat,
-    Sabtu,
-  ];
-
-  // Menampilkan komponen berdasarkan hari saat ini
-  const TodayComponent = dayComponents[new Date().getDay()];
-
-  // Menampilkan nama-nama piket sesuai dengan hari dan minggu saat ini
-  const currentPiketNames = piketGroup[new Date().getDay() - 1];
+    if (currentDayIndex >= 1 && currentDayIndex <= 6) {
+      fetchScheduleData();
+    } else {
+      setLoading(false); // Sunday
+    }
+  }, [currentDayIndex]);
 
   return (
     <>
@@ -79,10 +73,15 @@ const Schedule = () => {
             {currentDay}
           </div>
           <div data-aos="fade-up" data-aos-duration="400">
-            {TodayComponent ? (
-              <React.Suspense fallback={<p>Loading...</p>}>
-                <TodayComponent />
-              </React.Suspense>
+            {loading ? (
+              <p className="opacity-50">Loading...</p>
+            ) : schedules.length > 0 ? (
+              schedules.map((item, index) => (
+                <div key={item.id} className="border-t-2 border-b-2 border-white flex justify-between py-[0.50rem] w-72 px-3" data-aos="fade-up" data-aos-duration={600 + index * 100}>
+                  <div className="w-[50%] text-base font-medium">{item.subject}</div>
+                  <div className="flex justify-center items-center text-sm">{item.time_start}-{item.time_end}</div>
+                </div>
+              ))
             ) : (
               <p className="opacity-50">Tidak Ada Jadwal Hari Ini</p>
             )}
@@ -99,17 +98,19 @@ const Schedule = () => {
         >
           Piket
         </div>
-        {currentPiketNames && currentPiketNames.length > 0 ? (
-          currentPiketNames.map((piketName, index) => (
+        {loading ? (
+          <p className="opacity-50">Loading...</p>
+        ) : pikets.length > 0 ? (
+          pikets.map((item, index) => (
             <div
-              key={index}
+              key={item.id}
               className={` border-t-2 border-white flex justify-center py-[0.50rem] w-72 px-3 ${
-                index === currentPiketNames.length - 1 ? "border-b-2" : ""
+                index === pikets.length - 1 ? "border-b-2" : ""
               }`}
               data-aos="fade-up"
               data-aos-duration={600 + index * 100}
             >
-              <div className="text-base font-medium">{piketName}</div>
+              <div className="text-base font-medium">{item.student_name}</div>
             </div>
           ))
         ) : (

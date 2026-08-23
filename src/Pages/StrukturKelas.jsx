@@ -210,9 +210,9 @@ const StrukturKelas = () => {
 					</div>
 
 					<div className="flex-col hidden lg:flex">
-						<BorderStruktur Jabatan="Keagamaan" Nama="Niswah A A" Width="120px" />
+						<BorderStruktur Jabatan="Olahraga" Nama="Candra Tulus H" Width="120px" />
 						<div className="py-[3%]"></div>
-						<BorderStruktur Jabatan="" Nama="Niswah A A" Width="120px" />
+						<BorderStruktur Jabatan="" Nama="Marsa Dwi J" Width="120px" />
 					</div>
 				</div>
 

@@ -2,9 +2,11 @@ import { useEffect, useState } from "react"
 import BorderStruktur from "../components/BorderStruktur"
 import AOS from "aos"
 import "aos/dist/aos.css"
+import { supabase } from "../lib/supabase"
 
 const StrukturKelas = () => {
 	const [aosLoaded, setAosLoaded] = useState(false)
+	const [roles, setRoles] = useState({})
 
 	useEffect(() => {
 		if (!aosLoaded) {
@@ -12,13 +14,27 @@ const StrukturKelas = () => {
 			AOS.refresh()
 			setAosLoaded(true)
 		}
+
+		const fetchRoles = async () => {
+			const { data, error } = await supabase.from("class_roles").select("*")
+			if (data && !error) {
+				const rolesMap = {}
+				data.forEach((item) => {
+					rolesMap[item.role_key] = item.student_name
+				})
+				setRoles(rolesMap)
+			}
+		}
+		fetchRoles()
 	}, [aosLoaded])
+
+	const getName = (key, defaultName) => roles[key] || defaultName
 
 	return (
 		<div className="z-1  relative h-auto lg:h-[83vh] lg:overflow-hidden">
 			{/* wali kelas */}
 			<div data-aos="fade-up" data-aos-duration="500" className="mt-14 md:mt-10">
-				<BorderStruktur Jabatan="Wali Kelas" Nama="Gonang Sugiarto.S.E" Width="150px" />
+				<BorderStruktur Jabatan="Wali Kelas" Nama={getName('wali_kelas', 'Loading...')} Width="150px" />
 			</div>
 			<div className="flex flex-col justify-center items-center">
 				<img src="LineVertikal.svg" alt="" data-aos="fade-up" data-aos-duration="550" />
@@ -66,14 +82,14 @@ const StrukturKelas = () => {
 				{/* wakil dan ketua */}
 				<div className="flex relative top-[-3rem]" data-aos="fade-up" data-aos-duration="1200">
 					<div className="relative left-[0.2rem]">
-						<BorderStruktur Jabatan="Ketua Kelas" Nama="Muntaha A Z" Width="120px" />
+						<BorderStruktur Jabatan="Ketua Kelas" Nama={getName('ketua_kelas', 'Loading...')} Width="120px" />
 					</div>
 					<img src="LineHorizontalPendek.svg" className="relative top-3" />
 					<img src="LineHorizontalPendek.svg" className="relative top-3 hidden lg:flex" />
 					<img src="LineHorizontalPendek.svg" className="relative top-3 hidden lg:flex" />
 					<img src="LineHorizontalPendek.svg" className="relative top-3 hidden lg:flex" />
 					<div className="relative right-[0.2rem]">
-						<BorderStruktur Jabatan="Wakil Ketua" Nama="Muhammad S A" Width="120px" />
+						<BorderStruktur Jabatan="Wakil Ketua" Nama={getName('wakil_ketua', 'Loading...')} Width="120px" />
 					</div>
 				</div>
 
@@ -128,15 +144,15 @@ const StrukturKelas = () => {
 					data-aos="fade-up"
 					data-aos-duration="1200">
 					<div className="flex-col">
-						<BorderStruktur Jabatan="Sekertaris" Nama="Ayudya F P" Width="120px" />
+						<BorderStruktur Jabatan="Sekertaris" Nama={getName('sekretaris_1', 'Loading...')} Width="120px" />
 						<div className="py-[3%]"></div>
-						<BorderStruktur Jabatan="" Nama="Nayla N D N" Width="120px" />
+						<BorderStruktur Jabatan="" Nama={getName('sekretaris_2', 'Loading...')} Width="120px" />
 					</div>
 
 					<div className="flex-col">
-						<BorderStruktur Jabatan="Bendahara" Nama="Mutia S" Width="120px" />
+						<BorderStruktur Jabatan="Bendahara" Nama={getName('bendahara_1', 'Loading...')} Width="120px" />
 						<div className="py-[3%]"></div>
-						<BorderStruktur Jabatan="" Nama="Chelsea L R" Width="120px" />
+						<BorderStruktur Jabatan="" Nama={getName('bendahara_2', 'Loading...')} Width="120px" />
 					</div>
 				</div>
 
@@ -198,21 +214,21 @@ const StrukturKelas = () => {
 					data-aos="fade-up"
 					data-aos-duration="1100">
 					<div className="flex-col">
-						<BorderStruktur Jabatan="Keamanan" Nama="M Firdaus" Width="120px" />
+						<BorderStruktur Jabatan="Keamanan" Nama={getName('keamanan_1', 'Loading...')} Width="120px" />
 						<div className="py-[3%]"></div>
-						<BorderStruktur Jabatan="" Nama="Farhan Nurzaky" Width="120px" />
+						<BorderStruktur Jabatan="" Nama={getName('keamanan_2', 'Loading...')} Width="120px" />
 					</div>
 
 					<div className="flex-col">
-						<BorderStruktur Jabatan="Keagamaan" Nama="Balqis Amalia K" Width="120px" />
+						<BorderStruktur Jabatan="Keagamaan" Nama={getName('keagamaan_1', 'Loading...')} Width="120px" />
 						<div className="py-[3%]"></div>
-						<BorderStruktur Jabatan="" Nama="Niswah A A" Width="120px" />
+						<BorderStruktur Jabatan="" Nama={getName('keagamaan_2', 'Loading...')} Width="120px" />
 					</div>
 
 					<div className="flex-col hidden lg:flex">
-						<BorderStruktur Jabatan="Olahraga" Nama="Candra Tulus H" Width="120px" />
+						<BorderStruktur Jabatan="Olahraga" Nama={getName('olahraga_1', 'Loading...')} Width="120px" />
 						<div className="py-[3%]"></div>
-						<BorderStruktur Jabatan="" Nama="Marsa Dwi J" Width="120px" />
+						<BorderStruktur Jabatan="" Nama={getName('olahraga_2', 'Loading...')} Width="120px" />
 					</div>
 				</div>
 
@@ -225,9 +241,9 @@ const StrukturKelas = () => {
 						<img src="LineVertikal3.svg" alt="" className="lg:hidden" />
 						<img src="Circle.svg" alt="" className="relative top-[-0.7rem]" />
 						<div className="relative bottom-3">
-							<BorderStruktur Jabatan="Olahraga" Nama="Candra Tulus H" Width="120px" />
+							<BorderStruktur Jabatan="Olahraga" Nama={getName('olahraga_1', 'Loading...')} Width="120px" />
 							<div className="py-[3%]"></div>
-							<BorderStruktur Jabatan="" Nama="Marsa Dwi J" Width="120px" />
+							<BorderStruktur Jabatan="" Nama={getName('olahraga_2', 'Loading...')} Width="120px" />
 						</div>
 					</div>
 				</div>

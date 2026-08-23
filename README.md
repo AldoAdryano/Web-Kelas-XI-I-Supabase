@@ -73,6 +73,6 @@ Proyek ini pada asalnya (*template* awal, desain antarmuka, dan ide) dibuat oleh
 *Website* versi asli (menggunakan Firebase) dapat dikunjungi di [https://xitkj3.vercel.app/](https://xitkj3.vercel.app/). 
 
 Versi modifikasi (*Supabase Edition* dengan penambahan Admin Dashboard & Struktur Dinamis) dikembangkan dan dikelola oleh **Aldo Adryano**. 
-*Website* versi modifikasi ini dapat dikunjungi di: [https://xi-i.vercel.app/](https://xi-i.vercel.app/)
+*Website* versi modifikasi ini dapat dikunjungi di: [https://claiforne.vercel.app/](https://claiforne.vercel.app/)
 
 Sangat dihargai apabila Anda ingin menggunakan proyek ini untuk kelas Anda, harap tetap menyertakan kredit kepada pencipta aslinya maupun kontributor versi ini dalam penggunaan Anda. Terima kasih! 🙏

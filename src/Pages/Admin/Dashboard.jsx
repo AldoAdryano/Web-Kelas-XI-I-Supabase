@@ -248,6 +248,53 @@ const GalleryModeration = () => {
   );
 };
 
+const StructureModeration = () => {
+  const [roles, setRoles] = useState([]);
+
+  const fetchRoles = async () => {
+    const { data } = await supabase.from("class_roles").select("*").order("id", { ascending: true });
+    setRoles(data || []);
+  };
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
+
+  const handleUpdate = async (id, newName) => {
+    await supabase.from("class_roles").update({ student_name: newName }).eq("id", id);
+    fetchRoles();
+  };
+
+  return (
+    <div>
+      <h2 className="text-xl font-bold mb-4">Edit Struktur Kelas</h2>
+      <div className="flex flex-col gap-2">
+        {roles.map(r => (
+          <div key={r.id} className="bg-gray-800 p-3 rounded flex flex-col md:flex-row justify-between items-start md:items-center border border-gray-700 gap-2">
+            <div className="flex flex-col">
+              <span className="font-bold text-blue-400">{r.label || "Jabatan Tambahan"}</span>
+              <span className="text-xs text-gray-500 font-mono">{r.role_key}</span>
+            </div>
+            <div className="flex w-full md:w-auto gap-2">
+              <input 
+                type="text" 
+                defaultValue={r.student_name}
+                onBlur={(e) => {
+                  if (e.target.value !== r.student_name) {
+                    handleUpdate(r.id, e.target.value);
+                  }
+                }}
+                className="p-2 rounded bg-gray-700 text-white outline-none flex-1 border border-gray-600 focus:border-blue-500"
+              />
+            </div>
+          </div>
+        ))}
+        <p className="text-xs text-gray-400 mt-2">*Perubahan nama akan otomatis tersimpan ketika Anda mengeklik di luar kotak isian (hilang fokus).</p>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = ({ session }) => {
   const [activeTab, setActiveTab] = useState("chats");
   
@@ -268,6 +315,7 @@ const Dashboard = ({ session }) => {
       <div className="flex gap-4 mb-6 border-b border-gray-700 pb-2 overflow-x-auto">
         <button onClick={() => setActiveTab('chats')} className={`px-4 py-2 font-medium whitespace-nowrap ${activeTab === 'chats' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>Moderasi Chat</button>
         <button onClick={() => setActiveTab('gallery')} className={`px-4 py-2 font-medium whitespace-nowrap ${activeTab === 'gallery' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>Moderasi Galeri</button>
+        <button onClick={() => setActiveTab('structure')} className={`px-4 py-2 font-medium whitespace-nowrap ${activeTab === 'structure' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>Struktur Kelas</button>
         <button onClick={() => setActiveTab('mapel')} className={`px-4 py-2 font-medium whitespace-nowrap ${activeTab === 'mapel' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>Jadwal Pelajaran</button>
         <button onClick={() => setActiveTab('piket')} className={`px-4 py-2 font-medium whitespace-nowrap ${activeTab === 'piket' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>Jadwal Piket</button>
       </div>
@@ -275,6 +323,7 @@ const Dashboard = ({ session }) => {
       <div className="bg-[#1e1e24] p-6 rounded-lg border border-gray-700 shadow-xl min-h-[400px]">
         {activeTab === 'chats' && <ChatModeration />}
         {activeTab === 'gallery' && <GalleryModeration />}
+        {activeTab === 'structure' && <StructureModeration />}
         {activeTab === 'mapel' && <ScheduleModeration />}
         {activeTab === 'piket' && <PiketModeration />}
       </div>

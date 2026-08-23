@@ -12,6 +12,7 @@ import { useSpring, animated } from "@react-spring/web" // Import the necessary 
 
 const Carousel = () => {
 	const [images, setImages] = useState([])
+	const [loading, setLoading] = useState(true)
 	const [open, setOpen] = useState(false)
 	const [selectedImage, setSelectedImage] = useState(null)
 
@@ -23,6 +24,7 @@ const Carousel = () => {
 	// Fungsi untuk mengambil daftar gambar dari Supabase Storage
 	const fetchImagesFromSupabase = async () => {
 		try {
+			setLoading(true)
 			const { data, error } = await supabase.storage
 				.from("gallery")
 				.list("", { sortBy: { column: "created_at", order: "asc" } })
@@ -41,6 +43,8 @@ const Carousel = () => {
 			setImages(imageURLs)
 		} catch (error) {
 			console.error("Error fetching images from Supabase Storage:", error)
+		} finally {
+			setLoading(false)
 		}
 	}
 
@@ -95,8 +99,14 @@ const Carousel = () => {
 			<div className="text-white opacity-60 text-base font-semibold mb-4 mx-[10%] mt-10 lg:text-center lg:text-3xl lg:mb-8" id="Gallery">
 				Class Gallery
 			</div>
-			<div id="Carousel">
-				{images.length > 0 ? (
+			<div id="Carousel" className="min-h-[200px]">
+				{loading ? (
+					<div className="flex justify-center gap-4 px-4 overflow-hidden py-5">
+						{[1, 2, 3].map((n) => (
+							<div key={n} className="w-[80vw] md:w-[30vw] h-48 md:h-64 bg-gray-700 animate-pulse rounded-lg flex-shrink-0"></div>
+						))}
+					</div>
+				) : images.length > 0 ? (
 					<Slider {...settings}>
 						{images.map((imageUrl, index) => (
 							<img
@@ -110,7 +120,7 @@ const Carousel = () => {
 					</Slider>
 				) : (
 					<div className="text-center text-white opacity-40 py-10">
-						No gallery images available
+						Belum ada foto di Galeri
 					</div>
 				)}
 			</div>

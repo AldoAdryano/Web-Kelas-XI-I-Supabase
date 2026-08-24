@@ -54,8 +54,9 @@ function Chat() {
     loadMessages();
 
     // Langganan realtime untuk pesan baru
+    const channelId = `chats-realtime-${Math.random()}`;
     const channel = supabase
-      .channel("chats-realtime")
+      .channel(channelId)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "chats" },
